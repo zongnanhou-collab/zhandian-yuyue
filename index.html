@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>针绽预约</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 加载中 -->
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>加载中...</p>
+    </div>
+
+    <!-- 用户端首页 -->
+    <div id="page-home" class="page">
+      <header class="header">
+        <h1 class="title">针绽预约</h1>
+        <p class="subtitle">中医针灸·专业诊疗</p>
+        <button class="doctor-entry" id="btnDoctorEntry">医师入口</button>
+      </header>
+
+      <!-- 日历视图 -->
+      <section class="section">
+        <h2 class="section-title">预约日历</h2>
+        <div class="calendar" id="calendarView">
+          <!-- 日历由JS生成 -->
+        </div>
+      </section>
+
+      <!-- 日期选择 -->
+      <section class="section">
+        <h2 class="section-title">选择时间段</h2>
+        <div class="time-slots" id="timeSlots">
+          <p class="empty-tip">请在日历选择日期</p>
+        </div>
+      </section>
+
+      <!-- 底部按钮 -->
+      <footer class="footer">
+        <button class="btn-primary btn-block" id="btnBook" disabled>立即预约</button>
+        <button class="btn-secondary btn-block" id="btnMyAppointments">我的预约</button>
+      </footer>
+    </div>
+
+    <!-- 预约页面 -->
+    <div id="page-book" class="page hidden">
+      <header class="header">
+        <button class="back-btn" id="backHome">&lt; 返回</button>
+        <h1 class="title">填写预约信息</h1>
+      </header>
+
+      <section class="section">
+        <div class="card">
+          <div class="selected-info">
+            <p><span class="label">日期：</span><span id="selectedDate"></span></p>
+            <p><span class="label">时段：</span><span id="selectedTime"></span></p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">选择治疗项目</h3>
+          <div class="treatment-list" id="treatmentList">
+            <!-- 治疗项目由JS生成 -->
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">您的信息</h3>
+          <div class="form-group">
+            <label class="label">称呼</label>
+            <input type="text" class="input" id="patientName" placeholder="请输入您的姓名">
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="hideLastName">
+              <span>隐藏姓氏（仅医师可见）</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <button class="btn-primary btn-block" id="btnSubmit">确认预约</button>
+      </footer>
+    </div>
+
+    <!-- 我的预约页面 -->
+    <div id="page-my" class="page hidden">
+      <header class="header">
+        <button class="back-btn" id="backFromMy">&lt; 返回</button>
+        <h1 class="title">我的预约</h1>
+      </header>
+
+      <section class="section">
+        <div class="tabs">
+          <button class="tab active" data-status="confirmed">待就诊</button>
+          <button class="tab" data-status="cancelled">已取消</button>
+        </div>
+
+        <div class="appointment-list" id="myAppointments">
+          <p class="empty-tip">暂无预约</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 医师端 -->
+    <div id="page-doctor" class="page hidden">
+      <header class="header doctor-header">
+        <h1 class="title">医师管理</h1>
+        <p class="subtitle">针绽预约后台</p>
+      </header>
+
+      <section class="section">
+        <div class="menu-grid">
+          <div class="menu-item" id="menuAppointments">
+            <span class="icon">📋</span>
+            <span>预约管理</span>
+          </div>
+          <div class="menu-item" id="menuSettings">
+            <span class="icon">⚙️</span>
+            <span>权限设置</span>
+          </div>
+          <div class="menu-item" id="menuStats">
+            <span class="icon">📊</span>
+            <span>数据统计</span>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <button class="btn-secondary btn-block" id="btnExitDoctor">退出医师端</button>
+      </footer>
+    </div>
+
+    <!-- 医师端-预约管理 -->
+    <div id="page-doctor-appointments" class="page hidden">
+      <header class="header">
+        <button class="back-btn" id="backToDoctor">&lt; 返回</button>
+        <h1 class="title">预约管理</h1>
+      </header>
+
+      <section class="section">
+        <!-- 医师端日历视图 -->
+        <div class="calendar" id="doctorCalendarView">
+          <!-- 医师日历由JS生成 -->
+        </div>
+
+        <div class="appointment-list" id="doctorAppointments">
+          <p class="empty-tip">当天暂无预约</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 医师端-权限设置 -->
+    <div id="page-doctor-settings" class="page hidden">
+      <header class="header">
+        <button class="back-btn" id="backToDoctor2">&lt; 返回</button>
+        <h1 class="title">权限设置</h1>
+      </header>
+
+      <section class="section">
+        <div class="card">
+          <div class="setting-item">
+            <span class="setting-label">周末可预约</span>
+            <label class="switch">
+              <input type="checkbox" id="weekendEnabled">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">绑定医师微信</h3>
+          <p class="text-light">当前绑定状态：<span id="bindStatus">未绑定</span></p>
+          <button class="btn-primary btn-block" id="btnBindWechat">绑定当前微信</button>
+        </div>
+      </section>
+    </div>
+
+    <!-- 医师端-数据统计 -->
+    <div id="page-doctor-stats" class="page hidden">
+      <header class="header">
+        <button class="back-btn" id="backToDoctor3">&lt; 返回</button>
+        <h1 class="title">数据统计</h1>
+      </header>
+
+      <section class="section">
+        <div class="stats-grid">
+          <div class="card">
+            <h3 class="card-title">本周预约</h3>
+            <div class="stat-number" id="weekCount">0</div>
+            <p class="text-light">人次</p>
+          </div>
+
+          <div class="card">
+            <h3 class="card-title">本周收入</h3>
+            <div class="stat-number text-primary" id="weekIncome">¥0</div>
+            <p class="text-light">预计收入</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">治疗项目统计</h3>
+          <div id="treatmentStats">
+            <p class="empty-tip">暂无数据</p>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">本月统计</h3>
+          <div class="stat-row">
+            <div class="stat-item">
+              <span class="stat-label">本月人次</span>
+              <span class="stat-value" id="monthCount">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">本月收入</span>
+              <span class="stat-value" id="monthIncome">¥0</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 登录页面 -->
+    <div id="page-login" class="page hidden">
+      <header class="header">
+        <h1 class="title">医师登录</h1>
+      </header>
+
+      <section class="section">
+        <div class="card">
+          <p class="text-center text-light">请使用医师微信扫码登录</p>
+          <div class="qr-placeholder" id="wechatLogin">
+            <span class="icon">📱</span>
+            <p>微信扫码登录</p>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <button class="btn-secondary btn-block" id="btnBackToUser">返回用户端</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- 提示弹窗 -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- 确认对话框 -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-content">
+      <p class="modal-title" id="modalTitle">确认</p>
+      <p class="modal-message" id="modalMessage"></p>
+      <div class="modal-buttons">
+        <button class="btn-secondary" id="modalCancel">取消</button>
+        <button class="btn-primary" id="modalConfirm">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
