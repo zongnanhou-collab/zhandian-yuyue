@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -21,22 +22,24 @@
       <header class="header">
         <h1 class="title">针绽预约</h1>
         <p class="subtitle">中医针灸·专业诊疗</p>
-        <button class="doctor-entry" id="btnDoctorEntry">医师入口</button>
       </header>
-
-      <!-- 日历视图 -->
-      <section class="section">
-        <h2 class="section-title">预约日历</h2>
-        <div class="calendar" id="calendarView">
-          <!-- 日历由JS生成 -->
-        </div>
-      </section>
 
       <!-- 日期选择 -->
       <section class="section">
+        <div class="date-selector">
+          <button class="nav-btn" id="prevWeek">&lt;</button>
+          <div class="date-list" id="dateList">
+            <!-- 日期项由JS生成 -->
+          </div>
+          <button class="nav-btn" id="nextWeek">&gt;</button>
+        </div>
+      </section>
+
+      <!-- 时段选择 -->
+      <section class="section">
         <h2 class="section-title">选择时间段</h2>
         <div class="time-slots" id="timeSlots">
-          <p class="empty-tip">请在日历选择日期</p>
+          <p class="empty-tip">请选择日期</p>
         </div>
       </section>
 
@@ -145,9 +148,10 @@
       </header>
 
       <section class="section">
-        <!-- 医师端日历视图 -->
-        <div class="calendar" id="doctorCalendarView">
-          <!-- 医师日历由JS生成 -->
+        <div class="date-selector">
+          <button class="nav-btn" id="prevDay">&lt;</button>
+          <div class="current-date" id="currentDate"></div>
+          <button class="nav-btn" id="nextDay">&gt;</button>
         </div>
 
         <div class="appointment-list" id="doctorAppointments">
@@ -190,38 +194,16 @@
       </header>
 
       <section class="section">
-        <div class="stats-grid">
-          <div class="card">
-            <h3 class="card-title">本周预约</h3>
-            <div class="stat-number" id="weekCount">0</div>
-            <p class="text-light">人次</p>
-          </div>
-
-          <div class="card">
-            <h3 class="card-title">本周收入</h3>
-            <div class="stat-number text-primary" id="weekIncome">¥0</div>
-            <p class="text-light">预计收入</p>
-          </div>
+        <div class="card">
+          <h3 class="card-title">本周预约</h3>
+          <div class="stat-number" id="weekCount">0</div>
+          <p class="text-light">人次</p>
         </div>
 
         <div class="card">
           <h3 class="card-title">治疗项目统计</h3>
           <div id="treatmentStats">
             <p class="empty-tip">暂无数据</p>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3 class="card-title">本月统计</h3>
-          <div class="stat-row">
-            <div class="stat-item">
-              <span class="stat-label">本月人次</span>
-              <span class="stat-value" id="monthCount">0</span>
-            </div>
-            <div class="stat-item">
-              <span class="stat-label">本月收入</span>
-              <span class="stat-value" id="monthIncome">¥0</span>
-            </div>
           </div>
         </div>
       </section>
@@ -264,7 +246,8 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.15.0/dist/av-min.js"></script>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

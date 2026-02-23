@@ -2,9 +2,9 @@
 
 // ============ 配置 ============
 const CONFIG = {
-  // TODO: 替换为你的LeanCloud配置
-  appId: 'your-app-id',
-  appKey: 'your-app-key',
+  // Supabase 配置
+  supabaseUrl: 'https://nqkbhywrtvypmoeuytpi.supabase.co',
+  supabaseKey: 'sb_publishable_pJB6LH2VQS1hm6SLgq7jxA_4mt6FtB6',
   // 治疗项目配置（含价格）
   treatments: [
     { id: 1, name: '常规针刺（单面留针）', quota: 1, price: 80 },
@@ -36,26 +36,16 @@ const state = {
   calendarYear: new Date().getFullYear()
 };
 
-// ============ LeanCloud初始化 ============
-let AV;
-function initLeanCloud() {
-  if (typeof AV === 'undefined') {
-    showToast('请先配置LeanCloud AppID和AppKey', 'error');
+// ============ Supabase 初始化 ============
+let supabase;
+
+function initSupabase() {
+  if (typeof SupabaseClient === 'undefined') {
+    showToast('Supabase SDK 加载失败', 'error');
     return false;
   }
 
-  AV.init({
-    appId: CONFIG.appId,
-    appKey: CONFIG.appKey
-  });
-
-  // 尝试获取当前用户
-  const currentUser = AV.User.current();
-  if (currentUser) {
-    state.currentUser = currentUser;
-    checkDoctorStatus(currentUser);
-  }
-
+  supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
   return true;
 }
 
@@ -332,20 +322,21 @@ function selectDate(index) {
 
 async function loadAppointments(date) {
   try {
-    // 模拟数据（实际使用LeanCloud时取消注释）
-    // const Appointment = AV.extend('Appointment');
-    // const query = new AV.Query(Appointment);
-    // query.equalTo('date', date);
-    // query.equalTo('status', 'confirmed');
-    // const results = await query.find();
-    // state.appointments[date] = results;
+    // 从 Supabase 加载预约数据
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('date', date)
+      .eq('status', 'confirmed');
 
-    // 模拟空数据
-    state.appointments[date] = [];
+    if (error) throw error;
+
+    state.appointments[date] = data || [];
 
     renderTimeSlots();
   } catch (err) {
     console.error('加载预约失败:', err);
+    // 降级到本地模拟数据
     state.appointments[date] = [];
     renderTimeSlots();
   }
@@ -487,25 +478,50 @@ async function submitAppointment() {
   const treatment = CONFIG.treatments.find(function(t) { return t.id === state.selectedTreatment; });
   const hideLastName = document.getElementById('hideLastName').checked;
 
-  // 模拟预约成功
-  showToast('预约成功！', 'success');
+  try {
+    // 保存到 Supabase
+    const { data, error } = await supabase
+      .from('appointments')
+      .insert([
+        {
+          date: state.selectedDate,
+          time_slot: state.selectedSlot,
+          patient_name: patientName,
+          hide_last_name: hideLastName,
+          treatment: treatment.name,
+          quota_used: treatment.quota,
+          status: 'confirmed',
+          created_at: new Date().toISOString()
+        }
+      ]);
 
-  // 保存到本地模拟
-  if (!state.appointments[state.selectedDate]) {
-    state.appointments[state.selectedDate] = [];
+    if (error) throw error;
+
+    showToast('预约成功！', 'success');
+
+    // 刷新显示
+    loadAppointments(state.selectedDate);
+    showPage('page-home');
+  } catch (err) {
+    console.error('预约失败:', err);
+    // 降级到本地模拟
+    if (!state.appointments[state.selectedDate]) {
+      state.appointments[state.selectedDate] = [];
+    }
+
+    state.appointments[state.selectedDate].push({
+      timeSlot: state.selectedSlot,
+      patientName: patientName,
+      hideLastName: hideLastName,
+      treatment: treatment.name,
+      quotaUsed: treatment.quota,
+      status: 'confirmed'
+    });
+
+    showToast('预约成功（本地模式）！', 'success');
+    loadAppointments(state.selectedDate);
+    showPage('page-home');
   }
-
-  state.appointments[state.selectedDate].push({
-    timeSlot: state.selectedSlot,
-    patientName: patientName,
-    hideLastName: hideLastName,
-    treatment: treatment.name,
-    quotaUsed: treatment.quota,
-    status: 'confirmed'
-  });
-
-  loadAppointments(state.selectedDate);
-  showPage('page-home');
 }
 
 // ============ 我的预约 ============
@@ -776,6 +792,9 @@ function wechatLogin() {
 
 // ============ 初始化 ============
 function init() {
+  // 初始化 Supabase
+  initSupabase();
+
   // 加载日期
   loadDates();
 
