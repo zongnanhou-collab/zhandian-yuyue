@@ -40,9 +40,13 @@ const state = {
 let supabase;
 
 function initSupabase() {
-  // 暂时用本地模拟数据，云端功能稍后开启
-  console.log('初始化完成（本地模式）');
-  return true;
+  // 尝试连接 Supabase
+  if (typeof window.supabase !== 'undefined') {
+    supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+    console.log('Supabase 已连接');
+  } else {
+    console.log('使用本地模式');
+  }
 }
 
 // ============ 工具函数 ============
@@ -318,8 +322,20 @@ function selectDate(index) {
 
 async function loadAppointments(date) {
   try {
-    // 本地模拟数据
-    state.appointments[date] = [];
+    if (supabase) {
+      // 从 Supabase 加载
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('date', date)
+        .eq('status', 'confirmed');
+
+      if (error) throw error;
+      state.appointments[date] = data || [];
+    } else {
+      // 本地模拟
+      state.appointments[date] = [];
+    }
     renderTimeSlots();
   } catch (err) {
     console.error('加载预约失败:', err);
