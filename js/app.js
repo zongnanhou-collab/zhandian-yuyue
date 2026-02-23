@@ -37,19 +37,23 @@ const state = {
 };
 
 // ============ Supabase 初始化 ============
-let sb; // 用 sb 代替 supabase 避免冲突
+let sb = null;
 
 function initSupabase() {
-  // Supabase SDK 创建了全局 supabase 对象
-  if (typeof supabase !== 'undefined') {
+  // 直接使用 window.supabase（如果可用）
+  if (typeof window.supabase !== 'undefined') {
     try {
-      sb = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+      sb = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
       console.log('Supabase 已连接');
+      // 测试连接
+      sb.from('appointments').select('*').limit(1).then(function(result) {
+        console.log('数据库测试:', result.error ? '失败' : '成功');
+      });
     } catch(e) {
-      console.log('Supabase 连接失败，使用本地模式');
+      console.log('Supabase 连接失败，使用本地模式', e);
     }
   } else {
-    console.log('使用本地模式');
+    console.log('Supabase SDK 未加载，使用本地模式');
   }
 }
 
@@ -484,50 +488,51 @@ async function submitAppointment() {
   const treatment = CONFIG.treatments.find(function(t) { return t.id === state.selectedTreatment; });
   const hideLastName = document.getElementById('hideLastName').checked;
 
-  try {
-    // 保存到 Supabase
-    const { data, error } = await supabase
-      .from('appointments')
-      .insert([
-        {
-          date: state.selectedDate,
-          time_slot: state.selectedSlot,
-          patient_name: patientName,
-          hide_last_name: hideLastName,
-          treatment: treatment.name,
-          quota_used: treatment.quota,
-          status: 'confirmed',
-          created_at: new Date().toISOString()
-        }
-      ]);
-
-    if (error) throw error;
-
-    showToast('预约成功！', 'success');
-
-    // 刷新显示
-    loadAppointments(state.selectedDate);
-    showPage('page-home');
-  } catch (err) {
-    console.error('预约失败:', err);
-    // 降级到本地模拟
-    if (!state.appointments[state.selectedDate]) {
-      state.appointments[state.selectedDate] = [];
-    }
-
-    state.appointments[state.selectedDate].push({
-      timeSlot: state.selectedSlot,
-      patientName: patientName,
-      hideLastName: hideLastName,
-      treatment: treatment.name,
-      quotaUsed: treatment.quota,
-      status: 'confirmed'
-    });
-
-    showToast('预约成功（本地模式）！', 'success');
-    loadAppointments(state.selectedDate);
-    showPage('page-home');
+  // 先保存到本地状态
+  if (!state.appointments[state.selectedDate]) {
+    state.appointments[state.selectedDate] = [];
   }
+  state.appointments[state.selectedDate].push({
+    timeSlot: state.selectedSlot,
+    patientName: patientName,
+    hideLastName: hideLastName,
+    treatment: treatment.name,
+    quotaUsed: treatment.quota,
+    status: 'confirmed'
+  });
+
+  // 尝试保存到云端
+  if (sb) {
+    try {
+      const { error } = await sb
+        .from('appointments')
+        .insert([
+          {
+            date: state.selectedDate,
+            time_slot: state.selectedSlot,
+            patient_name: patientName,
+            hide_last_name: hideLastName,
+            treatment: treatment.name,
+            quota_used: treatment.quota,
+            status: 'confirmed',
+            created_at: new Date().toISOString()
+          }
+        ]);
+
+      if (error) throw error;
+      showToast('预约成功！', 'success');
+    } catch(err) {
+      console.error('保存到云端失败:', err);
+      showToast('预约成功（本地存储）！', 'success');
+    }
+  } else {
+    showToast('预约成功（本地模式）！', 'success');
+  }
+
+  // 刷新显示
+  loadAppointments(state.selectedDate);
+  showPage('page-home');
+}
 }
 
 // ============ 我的预约 ============
