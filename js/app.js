@@ -37,12 +37,13 @@ const state = {
 };
 
 // ============ Supabase 初始化 ============
+let sb; // 用 sb 代替 supabase 避免冲突
+
 function initSupabase() {
-  // Supabase SDK 已经创建了全局 supabase 对象
+  // Supabase SDK 创建了全局 supabase 对象
   if (typeof supabase !== 'undefined') {
     try {
-      // 使用配置创建客户端
-      window.sbClient = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+      sb = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
       console.log('Supabase 已连接');
     } catch(e) {
       console.log('Supabase 连接失败，使用本地模式');
@@ -325,9 +326,9 @@ function selectDate(index) {
 
 async function loadAppointments(date) {
   try {
-    if (sbClient) {
+    if (sb) {
       // 从 Supabase 加载
-      const { data, error } = await sbClient
+      const { data, error } = await sb
         .from('appointments')
         .select('*')
         .eq('date', date)
