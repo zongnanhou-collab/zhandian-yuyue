@@ -318,21 +318,11 @@ function selectDate(index) {
 
 async function loadAppointments(date) {
   try {
-    // 从 Supabase 加载预约数据
-    const { data, error } = await supabase
-      .from('appointments')
-      .select('*')
-      .eq('date', date)
-      .eq('status', 'confirmed');
-
-    if (error) throw error;
-
-    state.appointments[date] = data || [];
-
+    // 本地模拟数据
+    state.appointments[date] = [];
     renderTimeSlots();
   } catch (err) {
     console.error('加载预约失败:', err);
-    // 降级到本地模拟数据
     state.appointments[date] = [];
     renderTimeSlots();
   }
@@ -798,7 +788,8 @@ function init() {
   bindEvents();
 
   // 隐藏加载
-  document.getElementById('loading').classList.add('hidden');
+  const loadingEl = document.getElementById('loading');
+  if (loadingEl) loadingEl.classList.add('hidden');
 }
 
 function bindEvents() {
