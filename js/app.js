@@ -778,18 +778,14 @@ function wechatLogin() {
 
 // ============ 初始化 ============
 function init() {
-  // 初始化 Supabase
-  initSupabase();
-
-  // 加载日期
-  loadDates();
-
-  // 绑定事件
-  bindEvents();
-
-  // 隐藏加载
+  // 隐藏加载 - 先执行，防止卡住
   const loadingEl = document.getElementById('loading');
   if (loadingEl) loadingEl.classList.add('hidden');
+
+  // 初始化
+  initSupabase();
+  loadDates();
+  bindEvents();
 }
 
 function bindEvents() {
