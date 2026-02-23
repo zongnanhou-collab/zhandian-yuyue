@@ -40,12 +40,8 @@ const state = {
 let supabase;
 
 function initSupabase() {
-  if (typeof SupabaseClient === 'undefined') {
-    showToast('Supabase SDK 加载失败', 'error');
-    return false;
-  }
-
-  supabase = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey);
+  // 暂时用本地模拟数据，云端功能稍后开启
+  console.log('初始化完成（本地模式）');
   return true;
 }
 
